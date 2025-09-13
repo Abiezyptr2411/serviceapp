@@ -113,7 +113,7 @@ router.post('/booking', async (req, res) => {
       return res.status(400).json({
         status: false,
         responseCode: '01',
-        message: 'Maaf, pesanan anda belum terselesaikan.'
+        message: 'Oops, there is an order you have that is not finished yet.'
       });
     }
     let bookingTanggal = tanggal;
@@ -128,7 +128,7 @@ router.post('/booking', async (req, res) => {
         return res.status(400).json({
           status: false,
           responseCode: '01',
-          message: 'Format tanggal tidak valid.',
+          message: 'Invalid date format.',
         });
       }
       bookingTanggal = new Date(parsedDate);
@@ -147,7 +147,7 @@ router.post('/booking', async (req, res) => {
       return res.status(400).json({
         status: false,
         responseCode: '01',
-        message: 'Tanggal booking hanya bisa maksimal 1 bulan dari hari ini.',
+        message: 'The booking date can only be a maximum of 1 month from today.',
       });
     }
     const booking = await createBooking({
