@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, Dimensions, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
-// ...existing code...
 
 const { width } = Dimensions.get('window');
 const cardWidth = (width - 45) / 2;
 
 export default function KatalogScreen() {
   const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [apiMessage, setApiMessage] = useState('');
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -19,6 +20,7 @@ export default function KatalogScreen() {
         if (res.data) {
           if (res.data.responseCode === '00') {
             setProducts(res.data.katalog);
+            setFilteredProducts(res.data.katalog); 
           }
           if (res.data.message) {
             setApiMessage(res.data.message);
@@ -26,12 +28,25 @@ export default function KatalogScreen() {
         }
       } catch (err) {
         setProducts([]);
+        setFilteredProducts([]);
       } finally {
         setLoading(false);
       }
     };
     fetchProducts();
   }, []);
+
+  const handleSearch = (text) => {
+    setSearch(text);
+    if (text.trim() === '') {
+      setFilteredProducts(products);
+    } else {
+      const filtered = products.filter((item) =>
+        item.nama.toLowerCase().includes(text.toLowerCase())
+      );
+      setFilteredProducts(filtered);
+    }
+  };
 
   const renderItem = ({ item }) => (
     <View style={[styles.card, { width: cardWidth }]}>
@@ -43,7 +58,13 @@ export default function KatalogScreen() {
         resizeMode="contain"
       />
       <Text style={styles.name}>{item.nama}</Text>
-      <Text style={styles.price}>{item.harga}</Text>
+
+      {/* Tambahan deskripsi */}
+      <Text style={styles.desc} numberOfLines={2}>
+        {item.deskripsi || "-"}
+      </Text>
+
+      <Text style={styles.price}>Rp {item.harga.toLocaleString()}</Text>
       <TouchableOpacity style={styles.btn}>
         <Text style={styles.btnText}>Beli</Text>
       </TouchableOpacity>
@@ -52,16 +73,26 @@ export default function KatalogScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header konsisten */}
+      {/* Header */}
       <View style={styles.header}>
-        <Ionicons name="construct-outline" size={28} color="#fff" />
         <Text style={styles.headerTitle}>Layanan Service</Text>
+      </View>
+
+      {/* Search bar */}
+      <View style={styles.searchContainer}>
+        <Ionicons name="search" size={20} color="#888" style={{ marginRight: 8 }} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Cari produk..."
+          value={search}
+          onChangeText={handleSearch}
+        />
       </View>
 
       {/* Konten */}
       {loading ? (
         <Text style={{ textAlign: 'center', marginTop: 30 }}>Loading...</Text>
-      ) : products.length === 0 ? (
+      ) : filteredProducts.length === 0 ? (
         <View style={styles.notFoundContainer}>
           <Image
             source={require('./assets/notfound.png')}
@@ -73,7 +104,7 @@ export default function KatalogScreen() {
       ) : (
         <FlatList
           key="2"
-          data={products}
+          data={filteredProducts}
           keyExtractor={(item) => item.id?.toString()}
           renderItem={renderItem}
           numColumns={2}
@@ -95,6 +126,22 @@ const styles = StyleSheet.create({
   },
   headerTitle: { color: '#fff', fontSize: 20, fontWeight: 'bold', marginLeft: 10 },
 
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    margin: 15,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  searchInput: {
+    flex: 1,
+    height: 40,
+    fontSize: 14,
+  },
+
   card: {
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -105,6 +152,7 @@ const styles = StyleSheet.create({
   },
   image: { width: '100%', height: 100, borderRadius: 8, marginBottom: 10 },
   name: { fontSize: 14, fontWeight: '600', marginBottom: 5, textAlign: 'center' },
+  desc: { fontSize: 12, color: '#555', marginBottom: 5, textAlign: 'center' },
   price: { fontSize: 13, fontWeight: 'bold', color: '#d32f2f', marginBottom: 10 },
   btn: {
     backgroundColor: '#d32f2f',

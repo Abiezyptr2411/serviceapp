@@ -7,7 +7,6 @@ export default function ServiceScreen({ navigation }) {
     <ScrollView style={styles.container}>
       {/* HEADER */}
       <View style={styles.header}>
-        <Ionicons name="construct-outline" size={28} color="#fff" />
         <Text style={styles.headerTitle}>Layanan Service</Text>
       </View>
 
