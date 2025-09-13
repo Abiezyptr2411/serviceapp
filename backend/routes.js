@@ -201,19 +201,6 @@ router.get('/booking', async (req, res) => {
 });
 
 // Catalog Product
-// router.get('/katalog', async (req, res) => {
-//   try {
-//     const katalog = await Katalog.listKatalog();
-//     res.json({ responseCode: '00', katalog });
-//   } catch (error) {
-//     res.status(500).json({
-//       responseCode: '01',
-//       message: 'Failed to fetch katalog.',
-//       error: error.message
-//     });
-//   }
-// });
-
 router.get('/katalog', async (req, res) => {
   try {
     const katalog = await Katalog.listKatalog();
@@ -226,7 +213,6 @@ router.get('/katalog', async (req, res) => {
     });
   }
 });
-
 
 router.get('/katalog/detail', async (req, res) => {
   const { id } = req.query;
