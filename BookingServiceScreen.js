@@ -44,10 +44,14 @@ export default function BookingServiceScreen({ navigation }) {
         alert(res.data.message || 'Booking successful!');
         navigation.navigate("RiwayatService");
       } else {
-        alert(res.data.message || 'Booking failed!');
+        alert(res.data && res.data.message ? res.data.message : 'Booking failed!');
       }
     } catch (err) {
-      alert('Booking failed!');
+      if (err.response && err.response.data && err.response.data.message) {
+        alert(err.response.data.message);
+      } else {
+        alert('Booking failed!');
+      }
       console.error(err);
     }
   };

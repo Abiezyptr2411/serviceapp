@@ -94,6 +94,7 @@ router.post('/login', async (req, res) => {
 // Booking Service
 router.post('/booking', async (req, res) => {
   const { userId, tanggal, layanan, status } = req.body;
+  console.log('Booking payload:', { userId, tanggal, layanan, status });
   if (!userId || !tanggal || !layanan) {
     return res.status(400).json({
       status: false,
@@ -102,11 +103,58 @@ router.post('/booking', async (req, res) => {
     });
   }
   try {
+    const pesananBerjalan = await Booking.findOne({
+      where: {
+        userId: Number(userId),
+        status: ['pending', 'proses']
+      }
+    });
+    if (pesananBerjalan) {
+      return res.status(400).json({
+        status: false,
+        responseCode: '01',
+        message: 'Maaf, pesanan anda belum terselesaikan.'
+      });
+    }
+    let bookingTanggal = tanggal;
+    if (typeof tanggal === 'string') {
+      const match = tanggal.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (match) {
+        const [_, day, month, year] = match;
+        bookingTanggal = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      }
+      const parsedDate = Date.parse(bookingTanggal);
+      if (isNaN(parsedDate)) {
+        return res.status(400).json({
+          status: false,
+          responseCode: '01',
+          message: 'Format tanggal tidak valid.',
+        });
+      }
+      bookingTanggal = new Date(parsedDate);
+    }
+    if (bookingTanggal === 'Invalid date' || isNaN(new Date(bookingTanggal))) {
+      return res.status(400).json({
+        status: false,
+        responseCode: '01',
+        message: 'Format tanggal tidak valid.',
+      });
+    }
+    const now = new Date();
+    const maxBookingDate = new Date(now);
+    maxBookingDate.setMonth(now.getMonth() + 1);
+    if (bookingTanggal < now || bookingTanggal > maxBookingDate) {
+      return res.status(400).json({
+        status: false,
+        responseCode: '01',
+        message: 'Tanggal booking hanya bisa maksimal 1 bulan dari hari ini.',
+      });
+    }
     const booking = await createBooking({
-      userId,
-      tanggal,
-      layanan,
-      status: status || 'pending'
+      userId: Number(userId),
+      tanggal: bookingTanggal,
+      layanan: String(layanan),
+      status: status || 'proses'
     });
     res.status(201).json({
       status: true,
@@ -115,6 +163,7 @@ router.post('/booking', async (req, res) => {
       booking
     });
   } catch (error) {
+    console.error('Booking error:', error);
     res.status(500).json({
       status: false,
       responseCode: '01',
