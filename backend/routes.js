@@ -200,20 +200,52 @@ router.get('/booking', async (req, res) => {
   }
 });
 
-// News
-router.get('/berita', (req, res) => {
-  res.json({ responseCode: '00', berita: [] });
-});
-router.get('/berita/:id', (req, res) => {
-  res.json({ responseCode: '00', berita: {} });
+// Catalog Product
+// router.get('/katalog', async (req, res) => {
+//   try {
+//     const katalog = await Katalog.listKatalog();
+//     res.json({ responseCode: '00', katalog });
+//   } catch (error) {
+//     res.status(500).json({
+//       responseCode: '01',
+//       message: 'Failed to fetch katalog.',
+//       error: error.message
+//     });
+//   }
+// });
+
+router.get('/katalog', async (req, res) => {
+  try {
+    const katalog = await Katalog.listKatalog();
+    res.json({ responseCode: '00', katalog });
+  } catch (error) {
+    res.status(500).json({
+      responseCode: '01',
+      message: 'Failed to fetch katalog.',
+      error: error.message
+    });
+  }
 });
 
-// Catalog Product
-router.get('/katalog', (req, res) => {
-  res.json({ responseCode: '00', katalog: [] });
-});
-router.get('/katalog/:id', (req, res) => {
-  res.json({ responseCode: '00', katalog: {} });
+
+router.get('/katalog/detail', async (req, res) => {
+  const { id } = req.query;
+  try {
+    const katalog = await Katalog.getKatalogById(id);
+    if (!katalog) {
+      return res.status(404).json({ responseCode: '01', message: 'Product not found.' });
+    }
+    if (katalog.status !== 'active') {
+      return res.status(403).json({ responseCode: '01', message: 'Product is not active.' });
+    }
+    res.json({ responseCode: '00', katalog });
+  } catch (error) {
+    res.status(500).json({
+      responseCode: '01',
+      message: 'Failed to fetch katalog.',
+      error: error.message
+    });
+  }
 });
 
 // Vouchers
@@ -253,6 +285,14 @@ router.post('/games/play', (req, res) => {
 // Formulations
 router.post('/formulasi', (req, res) => {
   res.json({ responseCode: '00', result: 'Formulasi processed (dummy)' });
+});
+
+// News
+router.get('/berita', (req, res) => {
+  res.json({ responseCode: '00', berita: [] });
+});
+router.get('/berita/:id', (req, res) => {
+  res.json({ responseCode: '00', berita: {} });
 });
 
 module.exports = router;
